@@ -78,7 +78,7 @@ bool OpDescription::matchIntrinsic(unsigned intrinsicId) const {
 // ============================================================================
 // Descriptions of core instructions.
 
-template <> const OpSet &OpSet::getClass<UnaryInstruction>() {
+template <> const OpSet &OpSet::get<UnaryInstruction>() {
   static unsigned opcodes[] = {
       Instruction::Alloca,
       Instruction::Load,
@@ -93,7 +93,7 @@ template <> const OpSet &OpSet::getClass<UnaryInstruction>() {
   return set;
 }
 
-template <> const OpSet &OpSet::getClass<BinaryOperator>() {
+template <> const OpSet &OpSet::get<BinaryOperator>() {
   static unsigned opcodes[] = {
 #define HANDLE_BINARY_INST(num, opcode, Class) Instruction::opcode,
 #include "llvm/IR/Instruction.def"
@@ -102,24 +102,24 @@ template <> const OpSet &OpSet::getClass<BinaryOperator>() {
   return set;
 }
 
-// Generate OpDescription for all dedicate instruction classes.
+// Generate OpSet for all dedicated instruction classes.
 #define HANDLE_USER_INST(...)
 #define HANDLE_UNARY_INST(...)
 #define HANDLE_BINARY_INST(...)
 #define HANDLE_INST(num, opcode, Class)                                        \
-  template <> const OpDescription &OpDescription::get<Class>() {               \
-    static const OpDescription desc{Kind::Core, Instruction::opcode};          \
-    return desc;                                                               \
+  template <> const OpSet &OpSet::get<Class>() {                               \
+    static const OpSet set = OpSet::fromCoreOpcodes({Instruction::opcode});    \
+    return set;                                                                \
   }
 #include "llvm/IR/Instruction.def"
 
 #define HANDLE_INTRINSIC_DESC(Class, opcode)                                   \
-  template <> const OpDescription &OpDescription::get<Class>() {               \
-    static const OpDescription desc{Kind::Intrinsic, Intrinsic::opcode};       \
-    return desc;                                                               \
+  template <> const OpSet &OpSet::get<Class>() {                               \
+    static const OpSet set = OpSet::fromIntrinsicIDs({Intrinsic::opcode});     \
+    return set;                                                                \
   }
 #define HANDLE_INTRINSIC_DESC_OPCODE_SET(Class, ...)                           \
-  template <> const OpSet &OpSet::getClass<Class>() {                          \
+  template <> const OpSet &OpSet::get<Class>() {                               \
     static const OpSet set = OpSet::fromIntrinsicIDs({__VA_ARGS__});           \
     return set;                                                                \
   }

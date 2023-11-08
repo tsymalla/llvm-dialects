@@ -89,11 +89,13 @@ public:
     return set;
   }
 
-  template <typename ClassT> static const OpSet &getClass();
+  template <typename OpT> static const OpSet &get();
 
   // Construct an OpSet from a set of dialect ops, given as template
   // arguments.
-  template <typename... OpTs> static const OpSet get() {
+  template <typename... OpTs, std::size_t Count = sizeof...(OpTs),
+            std::enable_if_t<(Count > 1), bool> = true>
+  static const OpSet get() {
     static OpSet set;
     (... && appendT<OpTs>(set));
     return set;

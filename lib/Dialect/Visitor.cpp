@@ -59,20 +59,8 @@ void VisitorTemplate::add(VisitorKey key, VisitorCallback *fn,
   if (key.m_kind == VisitorKey::Kind::Intrinsic) {
     m_opMap[OpDescription::fromIntrinsic(key.m_intrinsicId)].push_back(
         handlerIdx);
-  } else if (key.m_kind == VisitorKey::Kind::OpDescription) {
-    const OpDescription *opDesc = key.m_description;
-
-    if (opDesc->isCoreOp()) {
-      m_opMap[OpDescription::fromCoreOp(opDesc->getOpcode())].push_back(
-          handlerIdx);
-    } else if (opDesc->isIntrinsic()) {
-      m_opMap[OpDescription::fromIntrinsic(opDesc->getOpcode())].push_back(
-          handlerIdx);
-    } else {
-      m_opMap[*opDesc].push_back(handlerIdx);
-    }
   } else if (key.m_kind == VisitorKey::Kind::OpSet) {
-    const OpSet *opSet = key.m_set;
+    const OpSet *opSet = key.m_ops;
 
     for (unsigned opcode : opSet->getCoreOpcodes())
       m_opMap[OpDescription::fromCoreOp(opcode)].push_back(handlerIdx);

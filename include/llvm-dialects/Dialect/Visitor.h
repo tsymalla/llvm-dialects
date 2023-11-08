@@ -100,21 +100,22 @@ class VisitorKey {
 
 public:
   template <typename OpT> static VisitorKey op() {
-    VisitorKey key{Kind::OpDescription};
-    key.m_description = &OpDescription::get<OpT>();
+    VisitorKey key{Kind::OpSet};
+    static const OpSet set = OpSet::get<OpT>();
+    key.m_ops = &set;
     return key;
   }
 
-  template <typename... OpTs> static VisitorKey opSet() {
+  template <typename... OpTs> static VisitorKey ops() {
     VisitorKey key{Kind::OpSet};
     static const OpSet set = OpSet::get<OpTs...>();
-    key.m_set = &set;
+    key.m_ops = &set;
     return key;
   }
 
-  static VisitorKey opSet(const OpSet &set) {
+  static VisitorKey op(const OpSet &set) {
     VisitorKey key{Kind::OpSet};
-    key.m_set = &set;
+    key.m_ops = &set;
     return key;
   }
 
@@ -126,16 +127,14 @@ public:
 
 private:
   enum class Kind {
-    OpDescription,
-    Intrinsic,
     OpSet,
+    Intrinsic,
   };
 
   VisitorKey(Kind kind) : m_kind(kind) {}
 
   Kind m_kind;
-  const OpDescription *m_description = nullptr;
-  const OpSet *m_set = nullptr;
+  const OpSet *m_ops = nullptr;
   unsigned m_intrinsicId = 0;
 };
 
@@ -369,69 +368,59 @@ public:
 
   Visitor<PayloadT> build() { return VisitorBuilderBase::build(); }
 
-  //
-  // Add a simple visitor case for a single templatized OpDescription and a
-  // functor.
-  //
-  template <typename OpT> VisitorBuilder &add(void (*fn)(PayloadT &, OpT &)) {
-    addCase<OpT>(detail::VisitorKey::op<OpT>(), fn);
+  /// @brief Add a visitor case for a templatized single-op OpSet and a functor.
+  template <typename OpT> VisitorBuilder &add(void (*fn)(PayloadT &, OpT &Op)) {
+    addSpecializedCase(detail::VisitorKey::op<OpT>(), fn);
     return *this;
   }
 
-  //
-  // Add a visitor case for a templatized OpSet and a functor.
-  //
+  /// @brief Add a visitor case for a templatized OpSet and a functor.
   template <typename... OpTs>
-  VisitorBuilder &addSet(void (*fn)(PayloadT &, llvm::Instruction &I)) {
-    addSetCase(detail::VisitorKey::opSet<OpTs...>(), fn);
+  VisitorBuilder &add(void (*fn)(PayloadT &, llvm::Instruction &I)) {
+    addGenericCase(detail::VisitorKey::ops<OpTs...>(), fn);
     return *this;
   }
 
-  //
-  // Add a visitor case for a OpSet passed by const reference and a functor.
-  //
-  VisitorBuilder &addSet(const OpSet &opSet,
-                         void (*fn)(PayloadT &, llvm::Instruction &I)) {
-    addSetCase(detail::VisitorKey::opSet(opSet), fn);
+  /// @brief Add a visitor case for a OpSet passed by const reference and a
+  /// functor.
+  VisitorBuilder &add(const OpSet &opSet,
+                      void (*fn)(PayloadT &, llvm::Instruction &I)) {
+    addGenericCase(detail::VisitorKey::op(opSet), fn);
     return *this;
   }
 
-  //
-  // Add a visitor case for a member function and a single OpDescription OpSet.
-  //
+  /// @brief Add a visitor case for a member function and a templatized OpSet.
+  template <typename... OpTs>
+  VisitorBuilder &add(void (PayloadT::*fn)(llvm::Instruction &)) {
+    addMemberFnGenericCase(detail::VisitorKey::ops<OpTs...>(), fn);
+    return *this;
+  }
+
+  /// @brief Add a visitor case for a templatized single-op OpSet and a functor.
   template <typename OpT> VisitorBuilder &add(void (PayloadT::*fn)(OpT &)) {
-    addMemberFnCase<OpT>(detail::VisitorKey::op<OpT>(), fn);
+    addMemberFnSpecializedCase(detail::VisitorKey::op<OpT>(), fn);
     return *this;
   }
 
-  //
-  // Add a visitor case for a member function and a templatized OpSet.
-  //
-  template <typename... OpTs>
-  VisitorBuilder &addSet(void (PayloadT::*fn)(llvm::Instruction &)) {
-    addMemberFnSetCase<OpTs...>(detail::VisitorKey::opSet<OpTs...>(), fn);
-    return *this;
-  }
-
-  //
-  // Add a visitor case for a member function and a OpSet, passed by const
-  // reference.
-  //
-  VisitorBuilder &addSet(const OpSet &opSet,
-                         void (PayloadT::*fn)(llvm::Instruction &)) {
-    addMemberFnSetCase(detail::VisitorKey::opSet(opSet), fn);
+  /// @brief Add a visitor case for a member function and a OpSet, passed by
+  /// const reference.
+  VisitorBuilder &add(const OpSet &opSet,
+                      void (PayloadT::*fn)(llvm::Instruction &)) {
+    addMemberFnGenericCase(detail::VisitorKey::op(opSet), fn);
     return *this;
   }
 
   VisitorBuilder &addIntrinsic(unsigned id,
                                void (*fn)(PayloadT &, llvm::IntrinsicInst &)) {
-    addCase<llvm::IntrinsicInst>(detail::VisitorKey::intrinsic(id), fn);
+    addSpecializedCase<llvm::IntrinsicInst>(detail::VisitorKey::intrinsic(id),
+                                            fn);
     return *this;
   }
 
   VisitorBuilder &addIntrinsic(unsigned id,
                                void (PayloadT::*fn)(llvm::IntrinsicInst &)) {
-    addMemberFnCase<llvm::IntrinsicInst>(detail::VisitorKey::intrinsic(id), fn);
+    addSpecializedCase<llvm::IntrinsicInst>(detail::VisitorKey::intrinsic(id),
+                                            fn);
     return *this;
   }
 
@@ -466,82 +455,80 @@ private:
       : VisitorBuilderBase(parent, projection) {}
 
   template <typename OpT>
-  void addCase(detail::VisitorKey key, void (*fn)(PayloadT &, OpT &)) {
+  void addSpecializedCase(detail::VisitorKey key,
+                          void (*fn)(PayloadT &, OpT &)) {
     detail::VisitorCallbackData data{};
     static_assert(sizeof(fn) <= sizeof(data.data));
     memcpy(&data.data, &fn, sizeof(fn));
-    VisitorBuilderBase::add(key, &VisitorBuilder::forwarder<OpT>, data);
-  }
-
-  void addSetCase(detail::VisitorKey key,
-                  void (*fn)(PayloadT &, llvm::Instruction &)) {
-    detail::VisitorCallbackData data{};
-    static_assert(sizeof(fn) <= sizeof(data.data));
-    memcpy(&data.data, &fn, sizeof(fn));
-    VisitorBuilderBase::add(key, &VisitorBuilder::setForwarder, data);
-  }
-
-  template <typename OpT>
-  void addMemberFnCase(detail::VisitorKey key, void (PayloadT::*fn)(OpT &)) {
-    detail::VisitorCallbackData data{};
-    static_assert(sizeof(fn) <= sizeof(data.data));
-    memcpy(&data.data, &fn, sizeof(fn));
-    VisitorBuilderBase::add(key, &VisitorBuilder::memberFnForwarder<OpT>, data);
-  }
-
-  template <typename... OpTs>
-  void addMemberFnSetCase(detail::VisitorKey key,
-                          void (PayloadT::*fn)(Instruction &)) {
-    detail::VisitorCallbackData data{};
-    static_assert(sizeof(fn) <= sizeof(data.data));
-    memcpy(&data.data, &fn, sizeof(fn));
-    VisitorBuilderBase::add(key, &VisitorBuilder::memberFnSetForwarder<OpTs>...,
+    VisitorBuilderBase::add(key, &VisitorBuilder::specializedforwarder<OpT>,
                             data);
   }
 
-  void addMemberFnSetCase(detail::VisitorKey key,
-                          void (PayloadT::*fn)(Instruction &)) {
+  /// Adds an OpSet case with a single operation. This is required to use a
+  /// specific op type in the Visitor callback if only a single op type is
+  /// provided in the call to add().
+  template <typename OpT>
+  void addGenericCase(detail::VisitorKey key, void (*fn)(PayloadT &, OpT &)) {
     detail::VisitorCallbackData data{};
     static_assert(sizeof(fn) <= sizeof(data.data));
     memcpy(&data.data, &fn, sizeof(fn));
-    VisitorBuilderBase::add(key, &VisitorBuilder::memberFnSetForwarder, data);
+    VisitorBuilderBase::add(key, &VisitorBuilder::genericForwarder, data);
+  }
+
+  void addGenericCase(detail::VisitorKey key,
+                      void (*fn)(PayloadT &, llvm::Instruction &)) {
+    detail::VisitorCallbackData data{};
+    static_assert(sizeof(fn) <= sizeof(data.data));
+    memcpy(&data.data, &fn, sizeof(fn));
+    VisitorBuilderBase::add(key, &VisitorBuilder::genericForwarder, data);
   }
 
   template <typename OpT>
-  static void forwarder(const detail::VisitorCallbackData &data, void *payload,
-                        llvm::Instruction *op) {
+  void addMemberFnSpecializedCase(detail::VisitorKey key,
+                                  void (PayloadT::*fn)(OpT &)) {
+    detail::VisitorCallbackData data{};
+    static_assert(sizeof(fn) <= sizeof(data.data));
+    memcpy(&data.data, &fn, sizeof(fn));
+    VisitorBuilderBase::add(
+        key, &VisitorBuilder::memberFnSpecializedForwarder<OpT>, data);
+  }
+
+  void addMemberFnGenericCase(detail::VisitorKey key,
+                              void (PayloadT::*fn)(Instruction &)) {
+    detail::VisitorCallbackData data{};
+    static_assert(sizeof(fn) <= sizeof(data.data));
+    memcpy(&data.data, &fn, sizeof(fn));
+    VisitorBuilderBase::add(key, &VisitorBuilder::memberFnGenericForwarder,
+                            data);
+  }
+
+  template <typename OpT>
+  static void specializedforwarder(const detail::VisitorCallbackData &data,
+                                   void *payload, llvm::Instruction *op) {
     void (*fn)(PayloadT &, OpT &);
     memcpy(&fn, &data.data, sizeof(fn));
     fn(*static_cast<PayloadT *>(payload), *llvm::cast<OpT>(op));
   }
 
-  static void setForwarder(const detail::VisitorCallbackData &data,
-                           void *payload, llvm::Instruction *op) {
+  static void genericForwarder(const detail::VisitorCallbackData &data,
+                               void *payload, llvm::Instruction *op) {
     void (*fn)(PayloadT &, llvm::Instruction &);
     memcpy(&fn, &data.data, sizeof(fn));
     fn(*static_cast<PayloadT *>(payload), *op);
   }
 
   template <typename OpT>
-  static void memberFnForwarder(const detail::VisitorCallbackData &data,
-                                void *payload, llvm::Instruction *op) {
+  static void
+  memberFnSpecializedForwarder(const detail::VisitorCallbackData &data,
+                               void *payload, llvm::Instruction *op) {
     void (PayloadT::*fn)(OpT &);
     memcpy(&fn, &data.data, sizeof(fn));
     PayloadT *self = static_cast<PayloadT *>(payload);
     (self->*fn)(*llvm::cast<OpT>(op));
   }
 
-  template <typename... OpTs>
-  static void memberFnSetForwarder(const detail::VisitorCallbackData &data,
-                                   void *payload, llvm::Instruction *op) {
-    void (PayloadT::*fn)(Instruction &);
-    memcpy(&fn, &data.data, sizeof(fn));
-    PayloadT *self = static_cast<PayloadT *>(payload);
-    (self->*fn)(*op);
-  }
-
-  static void memberFnSetForwarder(const detail::VisitorCallbackData &data,
-                                   void *payload, llvm::Instruction *op) {
+  static void memberFnGenericForwarder(const detail::VisitorCallbackData &data,
+                                       void *payload, llvm::Instruction *op) {
     void (PayloadT::*fn)(Instruction &);
     memcpy(&fn, &data.data, sizeof(fn));
     PayloadT *self = static_cast<PayloadT *>(payload);

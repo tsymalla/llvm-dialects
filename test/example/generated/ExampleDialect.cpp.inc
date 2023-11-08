@@ -5,6 +5,7 @@
 #undef GET_INCLUDES
 #include "llvm-dialects/Dialect/Builder.h"
 #include "llvm-dialects/Dialect/OpDescription.h"
+#include "llvm-dialects/Dialect/OpSet.h"
 #include "llvm-dialects/Dialect/Utils.h"
 #include "llvm-dialects/Dialect/Verifier.h"
 #include "llvm-dialects/Dialect/Visitor.h"
@@ -1833,6 +1834,13 @@ data
         static const ::llvm_dialects::OpDescription desc{false, "xd.add32"};
         return desc;
       }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::Add32Op>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{false, "xd.add32"}});
+        return set;
+      }
 
     
       template <>
@@ -1840,6 +1848,13 @@ data
       ::llvm_dialects::OpDescription::get<xd::CombineOp>() {
         static const ::llvm_dialects::OpDescription desc{true, "xd.combine"};
         return desc;
+      }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::CombineOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{true, "xd.combine"}});
+        return set;
       }
 
     
@@ -1849,6 +1864,13 @@ data
         static const ::llvm_dialects::OpDescription desc{true, "xd.extractelement"};
         return desc;
       }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::ExtractElementOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{true, "xd.extractelement"}});
+        return set;
+      }
 
     
       template <>
@@ -1856,6 +1878,13 @@ data
       ::llvm_dialects::OpDescription::get<xd::FromFixedVectorOp>() {
         static const ::llvm_dialects::OpDescription desc{true, "xd.fromfixedvector"};
         return desc;
+      }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::FromFixedVectorOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{true, "xd.fromfixedvector"}});
+        return set;
       }
 
     
@@ -1865,6 +1894,13 @@ data
         static const ::llvm_dialects::OpDescription desc{false, "xd.handle.get"};
         return desc;
       }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::HandleGetOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{false, "xd.handle.get"}});
+        return set;
+      }
 
     
       template <>
@@ -1872,6 +1908,13 @@ data
       ::llvm_dialects::OpDescription::get<xd::IExtOp>() {
         static const ::llvm_dialects::OpDescription desc{true, "xd.iext"};
         return desc;
+      }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::IExtOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{true, "xd.iext"}});
+        return set;
       }
 
     
@@ -1881,6 +1924,13 @@ data
         static const ::llvm_dialects::OpDescription desc{true, "xd.itrunc"};
         return desc;
       }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::ITruncOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{true, "xd.itrunc"}});
+        return set;
+      }
 
     
       template <>
@@ -1888,6 +1938,13 @@ data
       ::llvm_dialects::OpDescription::get<xd::InsertElementOp>() {
         static const ::llvm_dialects::OpDescription desc{true, "xd.insertelement"};
         return desc;
+      }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::InsertElementOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{true, "xd.insertelement"}});
+        return set;
       }
 
     
@@ -1897,6 +1954,13 @@ data
         static const ::llvm_dialects::OpDescription desc{true, "xd.read"};
         return desc;
       }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::ReadOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{true, "xd.read"}});
+        return set;
+      }
 
     
       template <>
@@ -1904,6 +1968,13 @@ data
       ::llvm_dialects::OpDescription::get<xd::SetReadOp>() {
         static const ::llvm_dialects::OpDescription desc{true, "xd.set.read"};
         return desc;
+      }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::SetReadOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{true, "xd.set.read"}});
+        return set;
       }
 
     
@@ -1913,6 +1984,13 @@ data
         static const ::llvm_dialects::OpDescription desc{false, "xd.set.write"};
         return desc;
       }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::SetWriteOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{false, "xd.set.write"}});
+        return set;
+      }
 
     
       template <>
@@ -1920,6 +1998,13 @@ data
       ::llvm_dialects::OpDescription::get<xd::SizeOfOp>() {
         static const ::llvm_dialects::OpDescription desc{false, "xd.sizeof"};
         return desc;
+      }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::SizeOfOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{false, "xd.sizeof"}});
+        return set;
       }
 
     
@@ -1929,6 +2014,13 @@ data
         static const ::llvm_dialects::OpDescription desc{true, "xd.stream.add"};
         return desc;
       }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::StreamAddOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{true, "xd.stream.add"}});
+        return set;
+      }
 
     
       template <>
@@ -1936,6 +2028,13 @@ data
       ::llvm_dialects::OpDescription::get<xd::StreamMaxOp>() {
         static const ::llvm_dialects::OpDescription desc{true, "xd.stream.max"};
         return desc;
+      }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::StreamMaxOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{true, "xd.stream.max"}});
+        return set;
       }
 
     
@@ -1945,6 +2044,13 @@ data
         static const ::llvm_dialects::OpDescription desc{true, "xd.stream.min"};
         return desc;
       }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::StreamMinOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{true, "xd.stream.min"}});
+        return set;
+      }
 
     
       template <>
@@ -1953,6 +2059,13 @@ data
         static const ::llvm_dialects::OpDescription desc{false, "xd.write"};
         return desc;
       }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::WriteOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{false, "xd.write"}});
+        return set;
+      }
 
     
       template <>
@@ -1960,6 +2073,13 @@ data
       ::llvm_dialects::OpDescription::get<xd::WriteVarArgOp>() {
         static const ::llvm_dialects::OpDescription desc{false, "xd.write.vararg"};
         return desc;
+      }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<xd::WriteVarArgOp>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{false, "xd.write.vararg"}});
+        return set;
       }
 
     

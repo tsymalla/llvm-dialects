@@ -146,7 +146,7 @@ struct VisitorNest {
   raw_ostream *out = nullptr;
   VisitorInnermost inner;
 
-  void visitBinaryOperator(Instruction &inst) {
+  void visitBinaryOperator(BinaryOperator &inst) {
     *out << "visiting BinaryOperator: " << inst << '\n';
   }
 };
@@ -182,7 +182,7 @@ template <bool rpot> const Visitor<VisitorContainer> &getExampleVisitor() {
             b.add<xd::ReadOp>([](VisitorNest &self, xd::ReadOp &op) {
               *self.out << "visiting ReadOp: " << op << '\n';
             });
-            b.addSet<xd::SetReadOp, xd::SetWriteOp>(
+            b.add<xd::SetReadOp, xd::SetWriteOp>(
                 [](VisitorNest &self, llvm::Instruction &op) {
                   if (isa<xd::SetReadOp>(op)) {
                     *self.out << "visiting SetReadOp (set): " << op << '\n';
@@ -190,7 +190,7 @@ template <bool rpot> const Visitor<VisitorContainer> &getExampleVisitor() {
                     *self.out << "visiting SetWriteOp (set): " << op << '\n';
                   }
                 });
-            b.addSet(complexSet, [](VisitorNest &self, llvm::Instruction &op) {
+            b.add(complexSet, [](VisitorNest &self, llvm::Instruction &op) {
               assert((op.getOpcode() == Instruction::Ret ||
                       (isa<IntrinsicInst>(&op) &&
                           cast<IntrinsicInst>(&op)->getIntrinsicID() ==
@@ -205,13 +205,11 @@ template <bool rpot> const Visitor<VisitorContainer> &getExampleVisitor() {
                 }
               }
             });
-            b.addSet(OpSet::getClass<UnaryInstruction>(),
-                     [](VisitorNest &self, llvm::Instruction &inst) {
-                       *self.out << "visiting UnaryInstruction: " << inst
-                                 << '\n';
-                     });
-            b.addSet(OpSet::getClass<BinaryOperator>(),
-                     &VisitorNest::visitBinaryOperator);
+            b.add<UnaryInstruction>(
+                [](VisitorNest &self, llvm::UnaryInstruction &inst) {
+                  *self.out << "visiting UnaryInstruction: " << inst << '\n';
+                });
+            b.add<BinaryOperator>(&VisitorNest::visitBinaryOperator);
             b.nest<raw_ostream>([](VisitorBuilder<raw_ostream> &b) {
               b.add<xd::WriteOp>([](raw_ostream &out, xd::WriteOp &op) {
                 out << "visiting WriteOp: " << op << '\n';

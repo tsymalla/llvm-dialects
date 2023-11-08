@@ -226,6 +226,7 @@ void llvm_dialects::genDialectDefs(raw_ostream& out, RecordKeeper& records) {
 #undef GET_INCLUDES
 #include "llvm-dialects/Dialect/Builder.h"
 #include "llvm-dialects/Dialect/OpDescription.h"
+#include "llvm-dialects/Dialect/OpSet.h"
 #include "llvm-dialects/Dialect/Utils.h"
 #include "llvm-dialects/Dialect/Verifier.h"
 #include "llvm-dialects/Dialect/Visitor.h"
@@ -403,7 +404,7 @@ void llvm_dialects::genDialectDefs(raw_ostream& out, RecordKeeper& records) {
   if (!dialect->cppNamespace.empty())
     out << tgfmt("} // namespace $namespace\n", &fmt);
 
-  // Define specializations of OpDescription::get for reflection
+  // Define specializations of OpSet::get for reflection
   for (const auto &opPtr : dialect->operations) {
     Operation &op = *opPtr;
 
@@ -417,6 +418,13 @@ void llvm_dialects::genDialectDefs(raw_ostream& out, RecordKeeper& records) {
       ::llvm_dialects::OpDescription::get<$namespace::$_op>() {
         static const ::llvm_dialects::OpDescription desc{$0, "$dialect.$mnemonic"};
         return desc;
+      }
+      
+      template <>
+      const ::llvm_dialects::OpSet &
+      ::llvm_dialects::OpSet::get<$namespace::$_op>() {
+        static const ::llvm_dialects::OpSet set = OpSet::fromOpDescriptions({{$0, "$dialect.$mnemonic"}});
+        return set;
       }
 
     )",

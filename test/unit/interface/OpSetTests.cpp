@@ -24,7 +24,6 @@
 **********************************************************************************************************************/
 
 #include "TestDialect.h"
-#include "llvm-dialects/Dialect/OpDescription.h"
 #include "llvm-dialects/Dialect/OpSet.h"
 #include "llvm/IR/Intrinsics.h"
 #include "gtest/gtest.h"
@@ -57,13 +56,6 @@ TEST(DialectsOpSetSizeTestsName, NonEmptyIntrinsicsTest) {
   const OpSet set = OpSet::fromIntrinsicIDs(
       {Intrinsic::lifetime_start, Intrinsic::lifetime_end});
   EXPECT_EQ_SIZE(set.getIntrinsicIDs().size(), 2);
-}
-
-TEST(DialectsOpSetSizeTestsName, NonEmptyOpDescriptionsTest) {
-  OpDescription const desc1 = OpDescription::get<test::DialectOp1>();
-  OpDescription const desc2 = OpDescription::get<test::DialectOp2>();
-  const OpSet set = OpSet::fromOpDescriptions({desc1, desc2});
-  EXPECT_EQ_SIZE(set.getDialectOps().size(), 2);
 }
 
 TEST(DialectsOpSetSizeTestsName, NonEmptyOpDescriptionsTemplatizedMakerTest) {
@@ -103,9 +95,7 @@ TEST(DialectsOpSetSizeTestsName,
 }
 
 TEST(DialectsOpSetSizeTestsName, StoreDuplicateOpDescriptionsOnce) {
-  const OpDescription desc1 = OpDescription::get<test::DialectOp1>();
-  const OpDescription desc2 = OpDescription::get<test::DialectOp1>();
-  OpSet set = OpSet::fromOpDescriptions({desc1, desc2});
+  OpSet set = OpSet::get<test::DialectOp1, test::DialectOp1>();
   EXPECT_EQ_SIZE(set.getDialectOps().size(), 1);
   EXPECT_TRUE(set.contains<test::DialectOp1>());
   EXPECT_FALSE(set.contains<test::DialectOp2>());
