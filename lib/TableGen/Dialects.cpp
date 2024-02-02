@@ -24,6 +24,7 @@
 
 #include "llvm/ADT/Twine.h"
 #include "llvm/TableGen/Record.h"
+#include <algorithm>
 
 using namespace llvm;
 using namespace llvm_dialects;
@@ -51,6 +52,15 @@ void GenDialect::finalize() {
   }
 
   llvm::sort(traitOperations, opLess);
+  const auto duplicate =
+      std::adjacent_find(traitOperations.begin(), traitOperations.end(),
+                         [](Operation *lhs, Operation *rhs) {
+                           return lhs->mnemonic == rhs->mnemonic;
+                         });
+
+  if (duplicate != traitOperations.end())
+    report_fatal_error(Twine("Found duplicate dialect operation: ") +
+                       (*duplicate)->mnemonic);
 
   Operation *current = nullptr;
   for (Operation *op : traitOperations) {
