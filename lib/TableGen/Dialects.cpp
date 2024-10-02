@@ -202,6 +202,7 @@ void GenDialectsContext::init(RecordKeeper &records,
     dialect->record = dialectRec;
     dialect->cppName = dialectRec->getName();
     dialect->name = name;
+    dialect->irNamespace = dialectRec->getValueAsString("namespace");
     dialect->cppNamespace = dialectRec->getValueAsString("cppNamespace");
     m_dialects.insert(std::make_pair(dialectRec, std::move(dialect)));
   }

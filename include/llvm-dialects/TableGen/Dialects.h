@@ -45,6 +45,7 @@ public:
   llvm::Record *record;
   std::string cppName;
   std::string name;
+  std::string irNamespace;
   std::string cppNamespace;
   std::vector<DialectType *> types;
   std::vector<OpClass *> opClasses;

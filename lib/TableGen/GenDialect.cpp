@@ -258,10 +258,11 @@ void llvm_dialects::genDialectDefs(raw_ostream& out, RecordKeeper& records) {
   FmtContext fmt;
   fmt.addSubst("Dialect", dialect->cppName);
   fmt.addSubst("dialect", dialect->name);
-  fmt.addSubst("namespace", dialect->cppNamespace);
+  fmt.addSubst("namespace", dialect->irNamespace);
+  fmt.addSubst("cppNamespace", dialect->cppNamespace);
 
   if (!dialect->cppNamespace.empty())
-    out << tgfmt("namespace $namespace {\n", &fmt);
+    out << tgfmt("namespace $cppNamespace {\n", &fmt);
 
   // Extra code to be inserted in the make() method.
   std::string makeExtra;
@@ -422,7 +423,7 @@ void llvm_dialects::genDialectDefs(raw_ostream& out, RecordKeeper& records) {
   }
 
   if (!dialect->cppNamespace.empty())
-    out << tgfmt("} // namespace $namespace\n", &fmt);
+    out << tgfmt("} // namespace $cppNamespace\n", &fmt);
 
   // Define specializations of OpDescription::get for reflection
   for (const auto &opPtr : dialect->operations) {
@@ -435,7 +436,7 @@ void llvm_dialects::genDialectDefs(raw_ostream& out, RecordKeeper& records) {
     out << tgfmt(R"(
       template <>
       const ::llvm_dialects::OpDescription &
-      ::llvm_dialects::OpDescription::get<$namespace::$_op>() {
+      ::llvm_dialects::OpDescription::get<$cppNamespace::$_op>() {
         static const ::llvm_dialects::OpDescription desc{$0, "$dialect.$mnemonic"};
         return desc;
       }
